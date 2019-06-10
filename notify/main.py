@@ -40,7 +40,7 @@ class User:
         hook = Webhook(self.webhook)
         # Go to site and check for PM Alerts popup
         already_sent = ''
-        old_alert_count = ''
+        old_alert_count = '0'
         while True:
             browser.get(('https://ogusers.com'))
             # Check PMS
@@ -72,25 +72,18 @@ class User:
                     print('[!] Sent notification for new PM..')
             except NoSuchElementException:
                 print('[!] Received no PMs, checking again in 60 seconds..')
+
             # Check Alerts
             alerts_find = browser.find_element_by_xpath("//div[@class='dropdown']")
             alerts_html = alerts_find.get_attribute('innerHTML')
             soup = BeautifulSoup(alerts_html.strip())
             tags = soup.find_all('span')
-            alert_count = tags[0].text
+            alert_count = tags[1].text
             if alert_count == old_alert_count:
                 print('[!] No new alerts, checking again in 60 seconds..')
             else:
                 # Discord webhook stuff
-                    embed = Embed(
-                        color=0x702c2c,
-                        timestamp='now'  # sets the timestamp to current time
-                        )
-                    embed.set_author(name=pm_from + ' has sent you a PM')
-                    embed.add_field(name='Title', value=pm_title)
-                    embed.add_field(name='Open DM', value=pm_link)
-                    embed.set_footer(text='Created by @braiden')
-                    hook.send(embed=embed)
+                    hook.send("You have a new alert! " + old_alert_count + ' => ' + alert_count + '')
                     old_alert_count = alert_count
                     print('[!] Sent notification for new Alert..')
             time.sleep(30)
