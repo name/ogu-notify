@@ -38,8 +38,8 @@ class User:
     def update(self):
         # Set webhook url
         hook = Webhook(self.webhook)
-        # Go to site and check for PM Alerts popup
-        already_sent = ''
+        # Go to site and check for PM Alerts and check alert count
+        already_sent = 'none'
         old_alert_count = '0'
         while True:
             browser.get(('https://ogusers.com'))
@@ -86,7 +86,7 @@ class User:
                     hook.send("You have a new alert! " + old_alert_count + ' => ' + alert_count + '')
                     old_alert_count = alert_count
                     print('[!] Sent notification for new Alert..')
-            time.sleep(30)
+            time.sleep(60)
 
 # Read config file and grab username/password
 config = configparser.ConfigParser()
