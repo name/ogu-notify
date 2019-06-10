@@ -6,6 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 
 # Disable python logging to console
 warnings.filterwarnings("ignore")
@@ -38,27 +39,38 @@ class User:
         # Set webhook url
         hook = Webhook(self.webhook)
         # Go to site and check for PM Alerts popup
-        browser.get(('https://ogusers.com'))
-        PM_alert = browser.find_element_by_xpath("//div[@class='pm_alert']")
-        alertPM = PM_alert.get_attribute('innerHTML')
-        soup = BeautifulSoup(alertPM.strip())
-        tags = soup.find_all('a')
-        # Set PM variables
-        pm_from = tags[1].text
-        pm_from_link = tags[1].attrs['href']
-        pm_title = tags[2].text
-        pm_link = tags[2].attrs['href']
-        # Discord webhook stuff
-        embed = Embed(
-            color=0x702c2c,
-            timestamp='now'  # sets the timestamp to current time
-            )
-        embed.set_author(name=pm_from + ' has sent you a PM')
-        embed.add_field(name='Title', value=pm_title)
-        embed.add_field(name='Open DM', value=pm_link)
-        embed.set_footer(text='Created by @braiden')
-        hook.send(embed=embed)
-        time.sleep(10)
+        already_sent = ''
+        while True:
+            browser.get(('https://ogusers.com'))
+            try:
+                PM_alert = browser.find_element_by_xpath("//div[@class='pm_alert']")
+                alertPM = PM_alert.get_attribute('innerHTML')
+                soup = BeautifulSoup(alertPM.strip())
+                tags = soup.find_all('a')
+                # Set PM variables
+                pm_from = tags[1].text
+                pm_from_link = tags[1].attrs['href']
+                pm_title = tags[2].text
+                pm_link = tags[2].attrs['href']
+                
+                if pm_link == already_sent:
+                    print('[!] Already sent notification, checking again in 60 seconds..')
+                else:
+                    # Discord webhook stuff
+                    embed = Embed(
+                        color=0x702c2c,
+                        timestamp='now'  # sets the timestamp to current time
+                        )
+                    embed.set_author(name=pm_from + ' has sent you a PM')
+                    embed.add_field(name='Title', value=pm_title)
+                    embed.add_field(name='Open DM', value=pm_link)
+                    embed.set_footer(text='Created by @braiden')
+                    hook.send(embed=embed)
+                    already_sent = pm_link
+                    print('[!] Sent notification..')
+            except NoSuchElementException:
+                print('[!] Received no PMs, checking again in 60 seconds..')
+            time.sleep(30)
 
 # Read config file and grab username/password
 config = configparser.ConfigParser()
