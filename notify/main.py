@@ -1,5 +1,6 @@
 # OGUsers Notifer
 import configparser, time, warnings, os
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -18,13 +19,6 @@ options.add_argument("--log-level=3")
 browser = webdriver.Chrome(chrome_options=options)
 clear()
 
-# TODO
-# - Clean up config file to make settings thread urls and comments more user friendly
-# - Research how to protect python code and run as executable
-# - Login via personal api and check hwid against system
-# - HWID Lock
-# - site for users to request hwid -> username/hwid/email
-
 class User:
     def __init__(self, username, password):
         self.username = username
@@ -40,9 +34,19 @@ class User:
 
     def update(self):
         browser.get(('https://ogusers.com'))
-        price = browser.find_element_by_xpath("//div[@class='pm_alert']")
-        price_content = price.get_attribute('innerHTML')
-        print(price_content.strip())
+        PM_alert = browser.find_element_by_xpath("//div[@class='pm_alert']")
+        alertPM = PM_alert.get_attribute('innerHTML')
+        # Get html: alertPM.strip()
+        soup = BeautifulSoup(alertPM.strip())
+        tags = soup.find_all('a')
+        pm_from = tags[1].text
+        pm_from_link = tags[1].attrs['href']
+        pm_title = tags[2].text
+        pm_link = tags[2].attrs['href']
+        print(pm_from)
+        print(pm_from_link)
+        print(pm_title)
+        print(pm_link)
         time.sleep(10)
 
 # Read config file and grab username/password
